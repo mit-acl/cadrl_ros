@@ -105,6 +105,8 @@ class Config:
     NORMALIZE_INPUT     = True
     USE_DROPOUT         = False
     USE_REGULARIZATION  = True
+    ROBOT_MODE          = True
+    EVALUATE_MODE       = True
 
     MAX_NUM_AGENTS_IN_ENVIRONMENT = 20
     MULTI_AGENT_ARCHS = ['RNN','WEIGHT_SHARING','VANILLA']

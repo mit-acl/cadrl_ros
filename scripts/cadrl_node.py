@@ -21,6 +21,8 @@ import math
 import rospkg
 
 import network
+import agent
+import util
 
 PED_RADIUS = 0.3
 # angle_1 - angle_2
@@ -31,7 +33,7 @@ def find_angle_diff(angle_1, angle_2):
     return angle_diff
 
 class NN_jackal():
-    def __init__(self, veh_name, veh_data, value_net):
+    def __init__(self, veh_name, veh_data, nn, actions):
         self.node_name = rospy.get_name()
         self.prev_other_agents_state = []
 
@@ -42,7 +44,9 @@ class NN_jackal():
         # self.agent = agent.Agent(0.0, 0.0, 100.0, 100.0, radius, pref_speed, initial_heading, id)
         
         # neural network
-        self.value_net = value_net
+        self.nn = nn
+        self.actions = actions
+        # self.value_net = value_net
         self.operation_mode = PlannerMode()
         self.operation_mode.mode = self.operation_mode.NN
         
@@ -121,7 +125,7 @@ class NN_jackal():
     def cbPose(self, msg):
         self.num_poses += 1
         q = msg.pose.orientation
-        self.psi = np.arctan2(2.0*(q.w*q.z + q.x*q.y), 1-2*(q.y*q.y+q.z*q.z))
+        self.psi = np.arctan2(2.0*(q.w*q.z + q.x*q.y), 1-2*(q.y*q.y+q.z*q.z)) # bounded by [-pi, pi]
         self.pose = msg
         self.visualize_pose(msg.pose.position,msg.pose.orientation)
 
@@ -324,9 +328,6 @@ class NN_jackal():
         self.desired_action = action
         self.desired_position.pose.position.x = self.pose.pose.position.x + 1*action[0]*np.cos(action[1])
         self.desired_position.pose.position.y = self.pose.pose.position.y + 1*action[0]*np.sin(action[1])
-        action_tmp = action.copy()
-        # print 'action: %.3f'%action_tmp[0],', %.3f'%find_angle_diff(action_tmp[1],self.psi)
-        # print self.desired_position.pose.position
 
         twist = Twist()
         twist.linear.x = action[0]
@@ -372,15 +373,18 @@ class NN_jackal():
                 yaw_error -= np.sign(yaw_error)*2*np.pi
             # print 'yaw_error:',yaw_error
             # max_yaw_error = 0.8
+            # yaw_error = self.desired_action[1]
             gain = 2
             vw = gain*yaw_error
 
             use_d_min = False
             if True: 
                 use_d_min = True
+                print "vmax:", self.find_vmax(self.d_min,yaw_error)
                 vx = min(self.desired_action[0], self.find_vmax(self.d_min,yaw_error))
             else:
                 vx = self.desired_action[0]
+            print "vx:", vx
             # elif abs(yaw_error) < max_yaw_error:
             #     vw = gain*yaw_error
             # else:
@@ -443,37 +447,41 @@ class NN_jackal():
             v_x = v_x * pref_speed / v
             v_y = v_y * pref_speed / v
 
-        agent = agent.Agent(x, y, goal_x, goal_y, radius, pref_speed, heading_angle, 0)
-        agent.vel_global_frame = np.array([v_x, v_y])
+        host_agent = agent.Agent(x, y, goal_x, goal_y, radius, pref_speed, heading_angle, 0)
+        host_agent.vel_global_frame = np.array([v_x, v_y])
+        # host_agent.print_agent_info()
 
-        obs = agent.observe([])[1:] # TODO: fill in with other agents
+        obs = host_agent.observe([])[1:] # TODO: fill in with other agents
         obs = np.expand_dims(obs, axis=0)
-        predictions = nn.predict_p(obs, None)[0]
-        action = network.actions[np.argmax(predictions)]
+        # print "obs:", obs
+        predictions = self.nn.predict_p(obs, None)[0]
+        # print "predictions:", predictions
+        # print "best action index:", np.argmax(predictions)
+        raw_action = copy.deepcopy(self.actions[np.argmax(predictions)])
+        action = np.array([pref_speed*raw_action[0], util.wrap(raw_action[1] + self.psi)])
+        print "raw_action:", raw_action
         print "action:", action
+
+        self.d_min = 100.0
 
 
 
         # if close to goal
-        dist_2_goal = np.linalg.norm(np.array([x-goal_x, y-goal_y]))
         kp_v = 0.5
         kp_r = 1   
 
-        if dist_2_goal < 2.0: # and self.percentComplete>=0.9:
-            pref_speed = max(min(kp_v * (dist_2_goal-0.1), pref_speed), 0.0)
-            # action[1] = max(min(kp_r * (dist_2_goal-0.1), 1.0), 0.0) * action[1]
-            heading_diff = action[1]
-            # heading_diff = find_angle_diff(action[1], self.psi)
-            # print 'nn heading_diff', heading_diff
-            action[1] = max(min(kp_r * (dist_2_goal-0.1), 1.0), 0.0) * heading_diff + self.psi
-            action[1] = (action[1] + np.pi) % ( 2 * np.pi) - np.pi
-            action[0] = min(action[0], pref_speed)
-        if dist_2_goal < 0.3:
+        if host_agent.dist_to_goal < 2.0: # and self.percentComplete>=0.9:
+            # print "somewhat close to goal"
+            pref_speed = max(min(kp_v * (host_agent.dist_to_goal-0.1), pref_speed), 0.0)
+            action[0] = min(raw_action[0], pref_speed)
+            turn_amount = max(min(kp_r * (host_agent.dist_to_goal-0.1), 1.0), 0.0) * raw_action[1]
+            action[1] = util.wrap(turn_amount + self.psi)
+        if host_agent.dist_to_goal < 0.3:
             self.stop_moving_flag = True
         else:
             self.stop_moving_flag = False
 
-        print 'chosen action (rel angle)', action[0], action[1]
+        # print 'chosen action (rel angle)', action[0], action[1]
         self.update_action(action)
 
 
@@ -851,43 +859,6 @@ def run():
     nn = network.NetworkVP_rnn(network.Config.DEVICE, 'network', num_actions)
     nn.simple_load(rospack.get_path('cadrl_ros')+'/checkpoints/network_02360000')
 
-    obs = np.zeros((network.Config.FULL_STATE_LENGTH))
-    obs = np.expand_dims(obs, axis=0)
-    # obs[1] = 3.0 # dist to goal
-    # obs[2] = 0.5 # heading to goal
-
-    num_trials = 10000
-    t_start = time.time()
-    for i in range(num_trials):
-        obs[0,0] = 10 # num other agents
-        obs[0,1] = np.random.uniform(0.5, 10.0) # dist to goal
-        obs[0,2] = np.random.uniform(-np.pi, np.pi) # heading to goal
-        obs[0,3] = np.random.uniform(0.2, 2.0) # pref speed
-        obs[0,4] = np.random.uniform(0.2, 1.5) # radius
-        predictions = nn.predict_p(obs, None)[0]
-    t_end = time.time()
-    print "avg query time:", (t_end - t_start)/num_trials
-    print "total time:", t_end - t_start
-    action = actions[np.argmax(predictions)]
-    print "action:", action
-
-    assert(0)
-
-
-
-    # load value_net
-    num_agents = 4
-    # mode = 'no_constr'; passing_side = 'none'; iteration = 500
-    # mode = 'no_constr'; passing_side = 'left'; iteration = 500
-    # mode = 'no_constr'; passing_side = 'right'; iteration = 500
-    # mode = 'rotate_constr'; passing_side = 'none'; iteration = 1000
-    # mode = 'rotate_constr'; passing_side = 'left'; iteration = 500
-    # mode = 'rotate_constr'; passing_side = 'right'; iteration = 500
-    mode = 'rotate_constr'; passing_side = 'right'; iteration = 1300
-    filename="/%d_agents_policy_iter_"%num_agents + str(iteration) + ".p"
-    # filename="/%d_agents_policy_iter_"%num_agents + str(2000) + ".p"
-    value_net = nn_nav.load_NN_navigation_value(file_dir, num_agents, mode, passing_side, filename=filename)
-
     rospy.init_node('nn_jackal',anonymous=False)
     veh_name = 'JA01'
     pref_speed = rospy.get_param("~jackal_speed")
@@ -895,7 +866,7 @@ def run():
 
     print "********\n*******\n*********\nJackal speed:", pref_speed, "\n**********\n******"
 
-    nn_jackal = NN_jackal(veh_name, veh_data, value_net)
+    nn_jackal = NN_jackal(veh_name, veh_data, nn, actions)
     rospy.on_shutdown(nn_jackal.on_shutdown)
 
     rospy.spin()

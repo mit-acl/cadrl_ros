@@ -1,7 +1,7 @@
 <launch>
-	<arg name="jackal_speed" default="0.5"/>
+	<arg name="jackal_speed" default="0.8"/>
     <!-- Launch neural net ros wrapper -->
-    <node pkg="cadrl_ros" type="cadrl_node.py" name="cadrl_node" output="screen">
+    <node pkg="cadrl_ros" type="cadrl_node.py" name="cadrl_node" output="screen" ns="/JA01">
         
         <!-- Publications -->
         <remap from="~other_vels" to="other_vels"/>

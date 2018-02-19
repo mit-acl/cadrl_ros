@@ -1,7 +1,7 @@
 import numpy as np
+from network import Config
 import util
 import operator
-from Config import Config
 
 class Agent():
     def __init__(self, start_x, start_y, goal_x, goal_y, radius, pref_speed, initial_heading, id):
@@ -120,7 +120,7 @@ class Agent():
         # Update time left so agent does not run around forever
         self.time_remaining_to_reach_goal -= dt
         self.t += dt
-        if self.time_remaining_to_reach_goal <= 0.0:
+        if self.time_remaining_to_reach_goal <= 0.0 and not Config.ROBOT_MODE:
             self.ran_out_of_time = True
 
         self._update_state_history()
@@ -143,6 +143,7 @@ class Agent():
         print 'Global Frame:'
         print '(px,py):', self.pos_global_frame
         print '(vx,vy):', self.vel_global_frame
+        print '(gx, gy):', self.goal_global_frame
         print 'speed:', self.speed_global_frame
         print 'heading:', self.heading_global_frame
         print 'Body Frame:'
