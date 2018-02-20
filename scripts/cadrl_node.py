@@ -215,107 +215,137 @@ class NN_jackal():
 
     def cbClusters(self, msg):
         other_agents = []
+        num_clusters = len(msg.labels)
+        for i in range(num_clusters):
+            index = msg.labels[i]
+            x = msg.mean_points[i].x; y = msg.mean_points[i].y
+            v_x = msg.velocities[i].x; v_y = msg.velocities[i].y
+            radius = PED_RADIUS
+            self.visualize_other_agent(x,y,msg.labels[i])
+            # helper fields
+            heading_angle = np.arctan2(v_y, v_x)
+            pref_speed = np.linalg.norm(np.array([v_x, v_y]))
+            goal_x = x + 5.0; goal_y = y + 5.0
+            
+            # # filter speed
+            # alpha = 0.2
+            # for prev_other_agent_state in self.prev_other_agents_state:
+            #     pos_diff = np.linalg.norm(prev_other_agent_state[0:2] - np.array([x,y]))
+            #     heading_diff_abs = abs(find_angle_diff(prev_other_agent_state[4], heading_angle))
+            #     if pos_diff < 0.5 and heading_diff_abs < np.pi / 4.0:
+            #         v_x = alpha * v_x + (1-alpha) * prev_other_agent_state[2]
+            #         v_y = alpha * v_y + (1-alpha) * prev_other_agent_state[3]
+
+            #         # TODO: find the best match rather than the first match
+            #         break
+            if pref_speed < 0.2:
+                pref_speed = 0; v_x = 0; v_y = 0
+            other_agents.append(agent.agent(x, y, goal_x, goal_y, pref_speed, radius, heading_angle, index))
+        self.other_agents = other_agents
+
+    # def cbClustersOld(self, msg):
+    #     other_agents = []
 
 
-        self.prev_clusters = copy.deepcopy(self.current_clusters)
-        self.current_clusters = msg
-        self.clusters = []
-        for i in range(len(self.current_clusters.labels)):
-            moving = True
-            # moving = np.linalg.norm([msg.velocities[i].x, \
-                # msg.velocities[i].y]) > 0.3
-            existing = True
-            # if msg.labels[i] in self.prev_clusters.labels:
-            #     prev_index = self.prev_clusters.labels.index(msg.labels[i])
-            #     prev_vel = self.prev_clusters.velocities[prev_index]
-            #     existing = np.linalg.norm([prev_vel.x, \
-            #         prev_vel.y]) > 0.6
-            # else:
-            #     existing = False
-            if moving and existing:
-                self.clusters.append(msg.labels[i]) 
-        # self.clusters = [msg.labels[i] \
-        #     for i in range(len(msg.labels)) \
-        #     if np.linalg.norm([msg.velocities[i].x, \
-        #         msg.velocities[i].y]) > 0.6]
-        num_peds = len(self.clusters)
+    #     self.prev_clusters = copy.deepcopy(self.current_clusters)
+    #     self.current_clusters = msg
+    #     self.clusters = []
+    #     for i in range(len(self.current_clusters.labels)):
+    #         moving = True
+    #         # moving = np.linalg.norm([msg.velocities[i].x, \
+    #             # msg.velocities[i].y]) > 0.3
+    #         existing = True
+    #         # if msg.labels[i] in self.prev_clusters.labels:
+    #         #     prev_index = self.prev_clusters.labels.index(msg.labels[i])
+    #         #     prev_vel = self.prev_clusters.velocities[prev_index]
+    #         #     existing = np.linalg.norm([prev_vel.x, \
+    #         #         prev_vel.y]) > 0.6
+    #         # else:
+    #         #     existing = False
+    #         if moving and existing:
+    #             self.clusters.append(msg.labels[i]) 
+    #     # self.clusters = [msg.labels[i] \
+    #     #     for i in range(len(msg.labels)) \
+    #     #     if np.linalg.norm([msg.velocities[i].x, \
+    #     #         msg.velocities[i].y]) > 0.6]
+    #     num_peds = len(self.clusters)
 
-        # compute relative position with respect to the Jackal
-        rel_dist = np.zeros((num_peds, )) 
-        rel_angle = np.zeros((num_peds, )) 
-        # (rel_dist, angle)
-        for i in range(num_peds):
-            rel_x = msg.mean_points[i].x - self.pose.pose.position.x
-            rel_y = msg.mean_points[i].y - self.pose.pose.position.y
-            rel_dist[i] = np.linalg.norm(np.array([rel_x, rel_y])) 
-            rel_angle[i] = find_angle_diff(np.arctan2(rel_y, rel_x), self.psi)
+    #     # compute relative position with respect to the Jackal
+    #     rel_dist = np.zeros((num_peds, )) 
+    #     rel_angle = np.zeros((num_peds, )) 
+    #     # (rel_dist, angle)
+    #     for i in range(num_peds):
+    #         rel_x = msg.mean_points[i].x - self.pose.pose.position.x
+    #         rel_y = msg.mean_points[i].y - self.pose.pose.position.y
+    #         rel_dist[i] = np.linalg.norm(np.array([rel_x, rel_y])) 
+    #         rel_angle[i] = find_angle_diff(np.arctan2(rel_y, rel_x), self.psi)
 
-        # ignore people in the back of Jackal (60 deg cone)
-        valid_inds = np.where(abs(rel_angle)< 4.0 / 6.0 * np.pi)[0]
-        # valid_inds = np.where(abs(rel_angle)< 5.0 / 6.0 * np.pi)[0]
-        # valid_inds = np.where((abs(rel_angle)< 5.0 / 6.0 * np.pi) & \
-        #     (rel_dist < 3.0))[0]
-        # get the n closest agents
-        self.other_agents_state = []
-        if len(valid_inds) == 0:
-            return
-        else:
-            if len(valid_inds) == 1:
-                valid_inds = valid_inds[0]
-                ped_traj_vec = [self.clusters[valid_inds]]
-                rel_dist = np.array([rel_dist[valid_inds]])
-            elif len(valid_inds) > 1:
-                # print 'before', len(self.ped_traj_vec)
-                # print 'valid_inds', valid_inds
-                ped_traj_vec = [self.clusters[tt] for tt in valid_inds]
-                # print 'after', len(self.ped_traj_vec)
-                rel_dist = rel_dist[valid_inds]
+    #     # ignore people in the back of Jackal (60 deg cone)
+    #     valid_inds = np.where(abs(rel_angle)< 4.0 / 6.0 * np.pi)[0]
+    #     # valid_inds = np.where(abs(rel_angle)< 5.0 / 6.0 * np.pi)[0]
+    #     # valid_inds = np.where((abs(rel_angle)< 5.0 / 6.0 * np.pi) & \
+    #     #     (rel_dist < 3.0))[0]
+    #     # get the n closest agents
+    #     self.other_agents_state = []
+    #     if len(valid_inds) == 0:
+    #         return
+    #     else:
+    #         if len(valid_inds) == 1:
+    #             valid_inds = valid_inds[0]
+    #             ped_traj_vec = [self.clusters[valid_inds]]
+    #             rel_dist = np.array([rel_dist[valid_inds]])
+    #         elif len(valid_inds) > 1:
+    #             # print 'before', len(self.ped_traj_vec)
+    #             # print 'valid_inds', valid_inds
+    #             ped_traj_vec = [self.clusters[tt] for tt in valid_inds]
+    #             # print 'after', len(self.ped_traj_vec)
+    #             rel_dist = rel_dist[valid_inds]
 
-            # sort other agents by rel_dist
-            # num_neighbors = min(len(rel_dist), self.value_net.num_agents)
-            # print 'num_neighbors', num_neighbors
-            # print 'rel_dist', rel_dist
-            # neighbor_inds = np.argpartition(rel_dist, num_neighbors)[:num_neighbors]
-            if len(rel_dist) > self.value_net.num_agents-1:
-                num_neighbors = self.value_net.num_agents-1
-                neighbor_inds = np.argpartition(rel_dist, num_neighbors)[:num_neighbors]
-            else:
-                neighbor_inds = np.arange(len(rel_dist))
-            # agent state: [pos.x, pos.y, vel.x, vel.y, heading_angle, pref_speed, \
-            #            goals[0].x, goals[0].y, radius, turning_dir]
-            for tt in neighbor_inds:
-                cluster_index = msg.labels.index(ped_traj_vec[tt])
-                ped_traj = ped_traj_vec[tt]
-                # rel pos, rel vel, size
-                x = msg.mean_points[cluster_index].x; y = msg.mean_points[cluster_index].y
-                v_x = msg.velocities[cluster_index].x; v_y = msg.velocities[cluster_index].y
-                radius = PED_RADIUS;turning_dir = 0.0
-                self.visualize_other_agent(x,y,msg.labels[cluster_index])
-                # helper fields
-                heading_angle = np.arctan2(v_y, v_x)
-                pref_speed = np.linalg.norm(np.array([v_x, v_y]))
-                goal_x = x + 5.0; goal_y = y + 5.0
+    #         # sort other agents by rel_dist
+    #         # num_neighbors = min(len(rel_dist), self.value_net.num_agents)
+    #         # print 'num_neighbors', num_neighbors
+    #         # print 'rel_dist', rel_dist
+    #         # neighbor_inds = np.argpartition(rel_dist, num_neighbors)[:num_neighbors]
+    #         if len(rel_dist) > self.value_net.num_agents-1:
+    #             num_neighbors = self.value_net.num_agents-1
+    #             neighbor_inds = np.argpartition(rel_dist, num_neighbors)[:num_neighbors]
+    #         else:
+    #             neighbor_inds = np.arange(len(rel_dist))
+    #         # agent state: [pos.x, pos.y, vel.x, vel.y, heading_angle, pref_speed, \
+    #         #            goals[0].x, goals[0].y, radius, turning_dir]
+    #         for tt in neighbor_inds:
+    #             cluster_index = msg.labels.index(ped_traj_vec[tt])
+    #             ped_traj = ped_traj_vec[tt]
+    #             # rel pos, rel vel, size
+    #             x = msg.mean_points[cluster_index].x; y = msg.mean_points[cluster_index].y
+    #             v_x = msg.velocities[cluster_index].x; v_y = msg.velocities[cluster_index].y
+    #             radius = PED_RADIUS;turning_dir = 0.0
+    #             self.visualize_other_agent(x,y,msg.labels[cluster_index])
+    #             # helper fields
+    #             heading_angle = np.arctan2(v_y, v_x)
+    #             pref_speed = np.linalg.norm(np.array([v_x, v_y]))
+    #             goal_x = x + 5.0; goal_y = y + 5.0
                 
-                # filter speed
-                alpha = 0.2
-                for prev_other_agent_state in self.prev_other_agents_state:
-                    pos_diff = np.linalg.norm(prev_other_agent_state[0:2] - np.array([x,y]))
-                    heading_diff_abs = abs(find_angle_diff(prev_other_agent_state[4], heading_angle))
-                    if pos_diff < 0.5 and heading_diff_abs < np.pi / 4.0:
-                        v_x = alpha * v_x + (1-alpha) * prev_other_agent_state[2]
-                        v_y = alpha * v_y + (1-alpha) * prev_other_agent_state[3]
+    #             # filter speed
+    #             alpha = 0.2
+    #             for prev_other_agent_state in self.prev_other_agents_state:
+    #                 pos_diff = np.linalg.norm(prev_other_agent_state[0:2] - np.array([x,y]))
+    #                 heading_diff_abs = abs(find_angle_diff(prev_other_agent_state[4], heading_angle))
+    #                 if pos_diff < 0.5 and heading_diff_abs < np.pi / 4.0:
+    #                     v_x = alpha * v_x + (1-alpha) * prev_other_agent_state[2]
+    #                     v_y = alpha * v_y + (1-alpha) * prev_other_agent_state[3]
 
-                        # TODO: find the best match rather than the first match
-                        break
-                if pref_speed < 0.2:
-                    pref_speed = 0; v_x = 0; v_y = 0
-                # other_agent_state = np.array([x, y, v_x, v_y, heading_angle, pref_speed, \
-                    # goal_x, goal_y, radius, turning_dir])
-                # self.other_agents_state.append(other_agent_state)
-                other_agents.append(agent.agent(x, y, goal_x, goal_y, pref_speed, radius, heading_angle, tt))
+    #                     # TODO: find the best match rather than the first match
+    #                     break
+    #             if pref_speed < 0.2:
+    #                 pref_speed = 0; v_x = 0; v_y = 0
+    #             # other_agent_state = np.array([x, y, v_x, v_y, heading_angle, pref_speed, \
+    #                 # goal_x, goal_y, radius, turning_dir])
+    #             # self.other_agents_state.append(other_agent_state)
+    #             other_agents.append(agent.agent(x, y, goal_x, goal_y, pref_speed, radius, heading_angle, tt))
                 
-            self.prev_other_agents_state = copy.deepcopy(self.other_agents_state)
-        return
+    #         self.prev_other_agents_state = copy.deepcopy(self.other_agents_state)
+    #     return
 
 
     def stop_moving(self):
@@ -431,9 +461,6 @@ class NN_jackal():
             return
 
 
-        # copy other_agents_state
-        other_agents_state = copy.deepcopy(self.other_agents_state)
-        
         # construct agent_state
         x = self.pose.pose.position.x; y = self.pose.pose.position.y
         v_x = self.vel.x; v_y = self.vel.y
@@ -451,7 +478,8 @@ class NN_jackal():
         host_agent.vel_global_frame = np.array([v_x, v_y])
         # host_agent.print_agent_info()
 
-        obs = host_agent.observe([])[1:] # TODO: fill in with other agents
+        other_agents_state = copy.deepcopy(self.other_agents_state)
+        obs = host_agent.observe(other_agents_state)[1:]
         obs = np.expand_dims(obs, axis=0)
         # print "obs:", obs
         predictions = self.nn.predict_p(obs, None)[0]
@@ -462,8 +490,22 @@ class NN_jackal():
         print "raw_action:", raw_action
         print "action:", action
 
-        self.d_min = 100.0
 
+
+        # feasible_actions
+        angles = (np.array(feasible_actions.angles) + np.pi) % (2 * np.pi) - np.pi
+        max_ranges = np.array(feasible_actions.max_speeds) - 0.3
+        path_lengths = np.array(feasible_actions.path_lengths)
+        # Sort the feasible actions by increasing angle
+        order_inds = np.argsort(angles)
+        max_ranges = max_ranges[order_inds]
+        angles = angles[order_inds]
+        path_lengths = path_lengths[order_inds]
+
+        # Find which index corresponds to straight in front, and 90 deg each side
+        zero_ind = np.digitize([self.psi+0.01], angles) - 1
+        self.d_min = max_ranges[zero_ind]
+        # self.d_min = 100.0
 
 
         # if close to goal
