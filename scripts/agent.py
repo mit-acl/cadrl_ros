@@ -37,7 +37,9 @@ class Agent():
 
         self.num_nearby_agents = None
 
-        if Config.EVALUATE_MODE or Config.PLAY_MODE:
+        if Config.ROBOT_MODE:
+            self.time_remaining_to_reach_goal = np.inf
+        elif Config.EVALUATE_MODE or Config.PLAY_MODE:
             self.time_remaining_to_reach_goal = 4*np.linalg.norm(self.pos_global_frame - self.goal_global_frame)/self.pref_speed
         else:
             self.time_remaining_to_reach_goal = 2*np.linalg.norm(self.pos_global_frame - self.goal_global_frame)/self.pref_speed

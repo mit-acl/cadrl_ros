@@ -1,5 +1,5 @@
 <launch>
-	<arg name="jackal_speed" default="0.8"/>
+	<arg name="jackal_speed" default="1.2"/>
     <!-- Launch neural net ros wrapper -->
     <node pkg="cadrl_ros" type="cadrl_node.py" name="cadrl_node" output="screen" ns="/JA01">
         
@@ -9,6 +9,8 @@
         <remap from="~pose_marker" to="pose_marker"/>
         <remap from="~path_marker" to="path_marker"/>
         <remap from="~goal_path_marker" to="goal_path_marker"/>
+        <remap from="~agent_marker" to="other_agents_marker"/>
+        <remap from="~agent_markers" to="other_agents_markers"/>
         
         <!-- Subscriptions -->
         <remap from="~pose" to="pose"/>

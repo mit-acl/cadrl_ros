@@ -86,6 +86,7 @@ class NN_jackal():
         self.pub_twist = rospy.Publisher('~nn_cmd_vel',Twist,queue_size=1)
         self.pub_pose_marker = rospy.Publisher('~pose_marker',Marker,queue_size=1)
         self.pub_agent_marker = rospy.Publisher('~agent_marker',Marker,queue_size=1)
+        self.pub_agent_markers = rospy.Publisher('~agent_markers',MarkerArray,queue_size=1)
         self.pub_path_marker = rospy.Publisher('~path_marker',Marker,queue_size=1)
         self.pub_goal_path_marker = rospy.Publisher('~goal_path_marker',Marker,queue_size=1)
         self.sub_pose = rospy.Subscriber('~pose',PoseStamped,self.cbPose)
@@ -94,8 +95,8 @@ class NN_jackal():
         self.sub_mode = rospy.Subscriber('~mode',PlannerMode, self.cbPlannerMode)
         self.sub_global_goal = rospy.Subscriber('~goal',PoseStamped, self.cbGlobalGoal)
         
-        # self.use_clusters = True
-        self.use_clusters = False
+        self.use_clusters = True
+        # self.use_clusters = False
         if self.use_clusters:
             self.sub_clusters = rospy.Subscriber('~clusters',Clusters, self.cbClusters)
         else:
@@ -110,12 +111,17 @@ class NN_jackal():
         self.global_goal = msg
         self.operation_mode.mode = self.operation_mode.SPIN_IN_PLACE
 
+        self.goal.pose.position.x = msg.pose.position.x
+        self.goal.pose.position.y = msg.pose.position.y
+        self.goal.header = msg.header
+        self.new_subgoal_received = True
+
     def cbNNActions(self,msg):
-        if msg.header.seq % 20 == 0:
-            self.goal.pose.position.x = msg.subgoal.x
-            self.goal.pose.position.y = msg.subgoal.y
-            self.goal.header = msg.header
-            self.new_subgoal_received = True
+        # if msg.header.seq % 20 == 0:
+        #     self.goal.pose.position.x = msg.subgoal.x
+        #     self.goal.pose.position.y = msg.subgoal.y
+        #     self.goal.header = msg.header
+        #     self.new_subgoal_received = True
         self.feasible_actions = msg
 
     def cbPlannerMode(self, msg):
@@ -215,13 +221,23 @@ class NN_jackal():
 
     def cbClusters(self, msg):
         other_agents = []
+
+
+        xs = []; ys = []; radii = []; labels = []
         num_clusters = len(msg.labels)
         for i in range(num_clusters):
             index = msg.labels[i]
             x = msg.mean_points[i].x; y = msg.mean_points[i].y
             v_x = msg.velocities[i].x; v_y = msg.velocities[i].y
-            radius = PED_RADIUS
-            self.visualize_other_agent(x,y,msg.labels[i])
+            # radius = PED_RADIUS
+            lower_r = np.linalg.norm(np.array([msg.mean_points[i].x-msg.min_points[i].x, msg.mean_points[i].y-msg.min_points[i].y]))
+            upper_r = np.linalg.norm(np.array([msg.mean_points[i].x-msg.max_points[i].x, msg.mean_points[i].y-msg.max_points[i].y]))
+            inflation_factor = 1.5
+            radius = max(PED_RADIUS, inflation_factor * max(upper_r, lower_r))
+
+
+            xs.append(x); ys.append(y); radii.append(radius); labels.append(index)
+            # self.visualize_other_agent(x,y,radius,msg.labels[i])
             # helper fields
             heading_angle = np.arctan2(v_y, v_x)
             pref_speed = np.linalg.norm(np.array([v_x, v_y]))
@@ -240,8 +256,9 @@ class NN_jackal():
             #         break
             if pref_speed < 0.2:
                 pref_speed = 0; v_x = 0; v_y = 0
-            other_agents.append(agent.agent(x, y, goal_x, goal_y, pref_speed, radius, heading_angle, index))
-        self.other_agents = other_agents
+            other_agents.append(agent.Agent(x, y, goal_x, goal_y, radius, pref_speed, heading_angle, index))
+        self.visualize_other_agents(xs, ys, radii, labels)
+        self.other_agents_state = other_agents
 
     # def cbClustersOld(self, msg):
     #     other_agents = []
@@ -410,11 +427,11 @@ class NN_jackal():
             use_d_min = False
             if True: 
                 use_d_min = True
-                print "vmax:", self.find_vmax(self.d_min,yaw_error)
+                # print "vmax:", self.find_vmax(self.d_min,yaw_error)
                 vx = min(self.desired_action[0], self.find_vmax(self.d_min,yaw_error))
             else:
                 vx = self.desired_action[0]
-            print "vx:", vx
+            # print "vx:", vx
             # elif abs(yaw_error) < max_yaw_error:
             #     vw = gain*yaw_error
             # else:
@@ -487,8 +504,8 @@ class NN_jackal():
         # print "best action index:", np.argmax(predictions)
         raw_action = copy.deepcopy(self.actions[np.argmax(predictions)])
         action = np.array([pref_speed*raw_action[0], util.wrap(raw_action[1] + self.psi)])
-        print "raw_action:", raw_action
-        print "action:", action
+        # print "raw_action:", raw_action
+        # print "action:", action
 
 
 
@@ -809,22 +826,26 @@ class NN_jackal():
         marker.lifetime = rospy.Duration(10.0)
         self.pub_pose_marker.publish(marker)
 
-    def visualize_other_agent(self,x_pos,y_pos,label):
-        # Orange box for other agent
-        marker = Marker()
-        marker.header.stamp = rospy.Time.now()
-        marker.header.frame_id = 'map'
-        marker.ns = 'other_agent'
-        marker.id = label
-        marker.type = marker.CUBE
-        marker.action = marker.ADD
-        marker.pose.position.x = x_pos
-        marker.pose.position.y = y_pos
-        # marker.pose.orientation = orientation
-        marker.scale = Vector3(x=0.5,y=0.5,z=1)
-        marker.color = ColorRGBA(r=1.0,g=0.4,a=1.0)
-        marker.lifetime = rospy.Duration(0.1)
-        self.pub_agent_marker.publish(marker)
+    def visualize_other_agents(self,xs,ys,radii,labels):
+        markers = MarkerArray()
+        for i in range(len(xs)):
+            # Orange box for other agent
+            marker = Marker()
+            marker.header.stamp = rospy.Time.now()
+            marker.header.frame_id = 'map'
+            marker.ns = 'other_agent'
+            marker.id = labels[i]
+            marker.type = marker.CYLINDER
+            marker.action = marker.ADD
+            marker.pose.position.x = xs[i]
+            marker.pose.position.y = ys[i]
+            # marker.pose.orientation = orientation
+            marker.scale = Vector3(x=2*radii[i],y=2*radii[i],z=1)
+            marker.color = ColorRGBA(r=1.0,g=0.4,a=1.0)
+            marker.lifetime = rospy.Duration(0.1)
+            markers.markers.append(marker)
+
+        self.pub_agent_markers.publish(markers)
 
     def visualize_action(self, use_d_min):
         # Display BLUE ARROW from current position to NN desired position
