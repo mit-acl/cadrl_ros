@@ -5,10 +5,14 @@ import tensorflow as tf
 import time
 
 class Actions():
+    # Define 11 choices of actions to be:
+    # [v_pref,      [-pi/6, -pi/12, 0, pi/12, pi/6]]
+    # [0.5*v_pref,  [-pi/6, 0, pi/6]]
+    # [0,           [-pi/6, 0, pi/6]]
     def __init__(self):
-        self.actions = np.mgrid[1.0:1.1:0.5, -np.pi/3:np.pi/3+0.01:np.pi/6].reshape(2, -1).T
-        self.actions = np.vstack([self.actions,np.mgrid[0.5:0.6:0.5, -np.pi/3:np.pi/3+0.01:np.pi/6].reshape(2, -1).T])
-        self.actions = np.vstack([self.actions,np.mgrid[0.0:0.1:0.5, -np.pi/3:np.pi/3+0.01:np.pi/6].reshape(2, -1).T])
+        self.actions = np.mgrid[1.0:1.1:0.5, -np.pi/6:np.pi/6+0.01:np.pi/12].reshape(2, -1).T
+        self.actions = np.vstack([self.actions,np.mgrid[0.5:0.6:0.5, -np.pi/6:np.pi/6+0.01:np.pi/6].reshape(2, -1).T])
+        self.actions = np.vstack([self.actions,np.mgrid[0.0:0.1:0.5, -np.pi/6:np.pi/6+0.01:np.pi/6].reshape(2, -1).T])
         self.num_actions = len(self.actions)
 
 class NetworkVPCore(object):
@@ -51,10 +55,6 @@ class NetworkVPCore(object):
     def simple_load(self, filename=None):
         if filename is None:
             print "[network.py] Didn't define simple_load filename"
-        # filename = '/home/mfe/ford_ws/src/cadrl_ros/checkpoints/network_02360000'
-        # filedir = rospack.get_path('cadrl_ros')+'checkpoints/'
-        # print filedir
-        # filename = filedir+'network_02360000'
         self.saver.restore(self.sess, filename)
 
 class NetworkVP_rnn(NetworkVPCore):
@@ -64,8 +64,6 @@ class NetworkVP_rnn(NetworkVPCore):
     def _create_graph(self):
         # Use shared parent class to construct graph inputs
         self._create_graph_inputs()
-
-        # Put custom architecture here
 
         if Config.USE_REGULARIZATION:
             regularizer = tf.contrib.layers.l2_regularizer(scale=0.0)
@@ -111,13 +109,9 @@ class Config:
     SENSING_HORIZON     = 8.0
 
     MAX_NUM_AGENTS_IN_ENVIRONMENT = 20
-    MULTI_AGENT_ARCHS = ['RNN','WEIGHT_SHARING','VANILLA']
-    # MULTI_AGENT_ARCH = 'VANILLA'
-    # MULTI_AGENT_ARCH = 'WEIGHT_SHARING'
     MULTI_AGENT_ARCH = 'RNN'
 
     DEVICE                        = '/cpu:0' # Device
-    MIN_POLICY = 0.0 # Minimum policy
 
     HOST_AGENT_OBSERVATION_LENGTH = 4 # dist to goal, heading to goal, pref speed, radius
     OTHER_AGENT_OBSERVATION_LENGTH = 7 # other px, other py, other vx, other vy, other radius, combined radius, distance between
@@ -134,21 +128,6 @@ class Config:
     IS_ON_AVG_VECTOR = np.array([0.0])
     IS_ON_STD_VECTOR = np.array([1.0])
 
-    if MAX_NUM_AGENTS_IN_ENVIRONMENT == 2:
-        # NN input:
-        # [dist to goal, heading to goal, pref speed, radius, other px, other py, other vx, other vy, other radius, combined radius, distance between]
-        MAX_NUM_OTHER_AGENTS_OBSERVED = 1
-        OTHER_AGENT_FULL_OBSERVATION_LENGTH = OTHER_AGENT_OBSERVATION_LENGTH
-        HOST_AGENT_STATE_SIZE = HOST_AGENT_OBSERVATION_LENGTH
-        FULL_STATE_LENGTH = HOST_AGENT_OBSERVATION_LENGTH + MAX_NUM_OTHER_AGENTS_OBSERVED * OTHER_AGENT_FULL_OBSERVATION_LENGTH
-        FIRST_STATE_INDEX = 0
-        MULTI_AGENT_ARCH = 'NONE'
-
-        NN_INPUT_AVG_VECTOR = np.hstack([HOST_AGENT_AVG_VECTOR,OTHER_AGENT_AVG_VECTOR])
-        NN_INPUT_STD_VECTOR = np.hstack([HOST_AGENT_STD_VECTOR,OTHER_AGENT_STD_VECTOR])
-
-
-    # if MAX_NUM_AGENTS in [3,4]:
     if MAX_NUM_AGENTS_IN_ENVIRONMENT > 2:
         if MULTI_AGENT_ARCH == 'RNN':
             # NN input:
@@ -164,21 +143,6 @@ class Config:
 
             NN_INPUT_AVG_VECTOR = np.hstack([RNN_HELPER_AVG_VECTOR,HOST_AGENT_AVG_VECTOR,np.tile(OTHER_AGENT_AVG_VECTOR,MAX_NUM_OTHER_AGENTS_OBSERVED)])
             NN_INPUT_STD_VECTOR = np.hstack([RNN_HELPER_STD_VECTOR,HOST_AGENT_STD_VECTOR,np.tile(OTHER_AGENT_STD_VECTOR,MAX_NUM_OTHER_AGENTS_OBSERVED)])
-
-        elif MULTI_AGENT_ARCH in ['WEIGHT_SHARING','VANILLA']:
-            # NN input:
-            # [dist to goal, heading to goal, pref speed, radius, 
-            #   other px, other py, other vx, other vy, other radius, dist btwn, combined radius, is_on,
-            #   other px, other py, other vx, other vy, other radius, dist btwn, combined radius, is_on,
-            #   other px, other py, other vx, other vy, other radius, dist btwn, combined radius, is_on]
-            MAX_NUM_OTHER_AGENTS_OBSERVED = 3
-            OTHER_AGENT_FULL_OBSERVATION_LENGTH = OTHER_AGENT_OBSERVATION_LENGTH + IS_ON_LENGTH
-            HOST_AGENT_STATE_SIZE = HOST_AGENT_OBSERVATION_LENGTH
-            FULL_STATE_LENGTH = HOST_AGENT_OBSERVATION_LENGTH + MAX_NUM_OTHER_AGENTS_OBSERVED * OTHER_AGENT_FULL_OBSERVATION_LENGTH
-            FIRST_STATE_INDEX = 0
-            
-            NN_INPUT_AVG_VECTOR = np.hstack([HOST_AGENT_AVG_VECTOR,np.tile(np.hstack([OTHER_AGENT_AVG_VECTOR,IS_ON_AVG_VECTOR]),MAX_NUM_OTHER_AGENTS_OBSERVED)])
-            NN_INPUT_STD_VECTOR = np.hstack([HOST_AGENT_STD_VECTOR,np.tile(np.hstack([OTHER_AGENT_STD_VECTOR,IS_ON_STD_VECTOR]),MAX_NUM_OTHER_AGENTS_OBSERVED)])
             
     FULL_LABELED_STATE_LENGTH = FULL_STATE_LENGTH + AGENT_ID_LENGTH
     NN_INPUT_SIZE = FULL_STATE_LENGTH
@@ -186,7 +150,6 @@ class Config:
 
 
 if __name__ == '__main__':
-    print "test"
     actions = Actions().actions
     num_actions = Actions().num_actions
     nn = NetworkVP_rnn(Config.DEVICE, 'network', num_actions)
