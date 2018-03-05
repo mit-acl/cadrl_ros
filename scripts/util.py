@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as ptch
 from network import Config
 
-
 # angle_1 - angle_2
 # contains direction in range [-3.14, 3.14]
 def find_angle_diff(angle_1, angle_2):
