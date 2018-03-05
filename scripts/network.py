@@ -6,9 +6,9 @@ import time
 
 class Actions():
     def __init__(self):
-        self.actions = np.mgrid[1.0:1.1:0.5, -np.pi/3:np.pi/3+0.01:np.pi/6].reshape(2, -1).T
-        self.actions = np.vstack([self.actions,np.mgrid[0.5:0.6:0.5, -np.pi/3:np.pi/3+0.01:np.pi/6].reshape(2, -1).T])
-        self.actions = np.vstack([self.actions,np.mgrid[0.0:0.1:0.5, -np.pi/3:np.pi/3+0.01:np.pi/6].reshape(2, -1).T])
+        self.actions = np.mgrid[1.0:1.1:0.5, -np.pi/6:np.pi/6+0.01:np.pi/12].reshape(2, -1).T
+        self.actions = np.vstack([self.actions,np.mgrid[0.5:0.6:0.5, -np.pi/6:np.pi/6+0.01:np.pi/6].reshape(2, -1).T])
+        self.actions = np.vstack([self.actions,np.mgrid[0.0:0.1:0.5, -np.pi/6:np.pi/6+0.01:np.pi/6].reshape(2, -1).T])
         self.num_actions = len(self.actions)
 
 class NetworkVPCore(object):
