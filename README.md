@@ -17,11 +17,13 @@ Link: to be added
 
 * [ROS](http://wiki.ros.org/) is optional (tested with Kinetic on Ubuntu 16.04)
 
-#### Notes:
+#### General Notes:
 The main contribution of this software is the `network.py` file and trained model parameters (TensorFlow checkpoints).
 Those contain the policy as reported in our paper and enables other reasearchers to easily compare future algorithms.
 
-To make it easy to understand the flow of the code, we provide a simple example in scripts/ga3c_cadrl_demo.ipynb, in the form of a Jupyter notebook. This can be used just as a reference, but if you want to edit the file, make sure Jupyter is installed in your tensorflow virtualenv to be sure it will work.
+To make it easy to understand the flow of the code, we provide an example in `scripts/ga3c_cadrl_demo.ipynb`, in the form of a Jupyter notebook. This can be used just as a reference, but if you want to edit the file, make sure Jupyter is installed in your tensorflow virtualenv to be sure it will work.
+
+### ROS Notes:
 
 We also provide a ROS implementation that we tested on a Clearpath Jackal ground robot.
 This node is just one module of the software required for autonomous navigation among dynamic obstacles, and much of it is written as to integrate with our system.
