@@ -13,23 +13,26 @@ Link: to be added
 
 * [TensorFlow](https://www.tensorflow.org/) is required (tested with version 1.4.0)
 
-* [ROS](http://wiki.ros.org/) is required (tested with Kinetic on Ubuntu 16.04)
+* numpy is required
 
-* numpy
+* [ROS](http://wiki.ros.org/) is optional (tested with Kinetic on Ubuntu 16.04)
 
 #### Notes:
 The main contribution of this software is the `network.py` file and trained model parameters (TensorFlow checkpoints).
 Those contain the policy as reported in our paper and enables other reasearchers to easily compare future algorithms.
 
-As an added bonus, we provide a ROS implementation that we tested on a Clearpath Jackal ground robot.
+To make it easy to understand the flow of the code, we provide a simple example in scripts/ga3c_cadrl_demo.ipynb, in the form of a Jupyter notebook. This can be used just as a reference, but if you want to edit the file, make sure Jupyter is installed in your tensorflow virtualenv to be sure it will work.
+
+We also provide a ROS implementation that we tested on a Clearpath Jackal ground robot.
 This node is just one module of the software required for autonomous navigation among dynamic obstacles, and much of it is written as to integrate with our system.
 The ROS node as written may not be particularly useful for other systems, but should provide an example of how one might connect the modules to test our learned collision avoidance policy on hardware.
 For example, other systems likely have different representation formats for dynamic obstacles as extracted from their perception system, but it should be straightforward to just replace our `cbClusters` method with another one, as long as the same information makes it into the state vector when the policy is queried.
+We recommend looking at the Jupyter notebook first.
 
 The algorithm was trained with goals set to be <10m from the agent's start position, so it would be necessary to provide this system with local subgoals if it were to be tested in a long journey.
 For short distances, say in an open atrium, this is probably not necessary.
 
-#### To Run:
+#### To Run ROS version:
 Clone and build this repo (assume destination is ~/catkin_ws/src)
 ```
 $ cd ~/catkin_ws/src
