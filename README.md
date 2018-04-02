@@ -2,6 +2,7 @@
 
 ROS implementation of a dynamic obstacle avoidance algorithm trained with Deep RL
 <img src="misc/A3C_20agents_0.png" width="500">
+![20agents](misc/A3C_20agents_0.png)
 
 #### Paper:
 
