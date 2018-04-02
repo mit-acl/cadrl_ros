@@ -1,8 +1,8 @@
 # cadrl_ros (Collision Avoidance with Deep RL)
 
 ROS implementation of a dynamic obstacle avoidance algorithm trained with Deep RL
-<img src="misc/A3C_20agents_0.png" width="500">
-![20agents](misc/A3C_20agents_0.png)
+<img src="misc/A3C_20agents_0.png" width="500" alt="20 agent circle">
+
 
 #### Paper:
 
