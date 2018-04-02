@@ -921,6 +921,8 @@ def run():
     num_actions = a.num_actions
     nn = network.NetworkVP_rnn(network.Config.DEVICE, 'network', num_actions)
     nn.simple_load(rospack.get_path('cadrl_ros')+'/checkpoints/network_01900000')
+    # nn.simple_load(rospack.get_path('cadrl_ros')+'/checkpoints/network_01653000')
+    nn.simple_load(rospack.get_path('cadrl_ros')+'/checkpoints/network_01900000')
 
     rospy.init_node('nn_jackal',anonymous=False)
     veh_name = 'JA01'
