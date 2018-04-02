@@ -108,6 +108,8 @@ class Config:
 
     SENSING_HORIZON     = 8.0
 
+    MIN_POLICY = 1e-4
+
     MAX_NUM_AGENTS_IN_ENVIRONMENT = 20
     MULTI_AGENT_ARCH = 'RNN'
 
@@ -135,7 +137,7 @@ class Config:
             #   other px, other py, other vx, other vy, other radius, dist btwn, combined radius,
             #   other px, other py, other vx, other vy, other radius, dist btwn, combined radius,
             #   other px, other py, other vx, other vy, other radius, dist btwn, combined radius]
-            MAX_NUM_OTHER_AGENTS_OBSERVED = 3
+            MAX_NUM_OTHER_AGENTS_OBSERVED = 10
             OTHER_AGENT_FULL_OBSERVATION_LENGTH = OTHER_AGENT_OBSERVATION_LENGTH
             HOST_AGENT_STATE_SIZE = HOST_AGENT_OBSERVATION_LENGTH
             FULL_STATE_LENGTH = RNN_HELPER_LENGTH + HOST_AGENT_OBSERVATION_LENGTH + MAX_NUM_OTHER_AGENTS_OBSERVED * OTHER_AGENT_FULL_OBSERVATION_LENGTH

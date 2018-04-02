@@ -6,17 +6,17 @@ from network import Config
 # angle_1 - angle_2
 # contains direction in range [-3.14, 3.14]
 def find_angle_diff(angle_1, angle_2):
-	angle_diff_raw = angle_1 - angle_2
-	angle_diff = (angle_diff_raw + np.pi) % (2 * np.pi) - np.pi
-	return angle_diff
+    angle_diff_raw = angle_1 - angle_2
+    angle_diff = (angle_diff_raw + np.pi) % (2 * np.pi) - np.pi
+    return angle_diff
 
 # keep angle between [-pi, pi]
 def wrap(angle):
-	while angle >= np.pi:
-		angle -= 2*np.pi
-	while angle < -np.pi:
-		angle += 2*np.pi
-	return angle
+    while angle >= np.pi:
+        angle -= 2*np.pi
+    while angle < -np.pi:
+        angle += 2*np.pi
+    return angle
 
 def find_nearest(array,value):
     # array is a 1D np array
