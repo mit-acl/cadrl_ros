@@ -7,7 +7,8 @@ ROS implementation of a dynamic obstacle avoidance algorithm trained with Deep R
 #### Paper:
 
 M. Everett, Y. Chen, and J. P. How, "Motion Planning Among Dynamic, Decision-Making Agents with Deep Reinforcement Learning", submitted to IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2018
-Link: to be added
+
+Link: https://arxiv.org/abs/1805.01956
 
 #### Dependencies:
 
