@@ -18,6 +18,8 @@ Link: https://arxiv.org/abs/1805.01956
 
 * [ROS](http://wiki.ros.org/) is optional (tested with Kinetic on Ubuntu 16.04)
 
+* [ford_msgs](https://bitbucket.org/acl-swarm/ford_msgs/src/master/) if you're using ROS, for our custom msg definitions.
+
 #### General Notes:
 The main contribution of this software is the `network.py` file and trained model parameters (TensorFlow checkpoints).
 Those contain the policy as reported in our paper and enables other reasearchers to easily compare future algorithms.
@@ -36,10 +38,11 @@ The algorithm was trained with goals set to be <10m from the agent's start posit
 For short distances, say in an open atrium, this is probably not necessary.
 
 #### To Run ROS version:
-Clone and build this repo (assume destination is ~/catkin_ws/src)
+Clone and build this repo and its dependency (assume destination is ~/catkin_ws/src)
 ```
 $ cd ~/catkin_ws/src
 $ git clone git@github.com/mfe7/cadrl_ros
+$ git clone git clone git@bitbucket.org:acl-swarm/ford_msgs.git -b dev
 $ cd ~/catkin_ws && catkin_make
 ```
 
