@@ -42,7 +42,7 @@ Clone and build this repo and its dependency (assume destination is ~/catkin_ws/
 ```
 $ cd ~/catkin_ws/src
 $ git clone git@github.com/mfe7/cadrl_ros
-$ git clone git clone git@bitbucket.org:acl-swarm/ford_msgs.git -b dev
+$ git clone git@bitbucket.org:acl-swarm/ford_msgs.git -b dev
 $ cd ~/catkin_ws && catkin_make
 ```
 
