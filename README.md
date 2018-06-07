@@ -78,6 +78,10 @@ Connect inputs/outputs of your system to `launch/cadrl_node.launch`
 ##### Parameters:
 * ~jackal_speed
 	Robot's preferred speed (m/s) - tested below 1.2m/s (and trained to be optimized near this speed)
+	
+#### Datasets:
+As mentioned in the paper, we provide a few datasets that might be useful to researchers hoping to train NNs for collision avoidance.
+Please find the files in [this Dropbox folder](https://www.dropbox.com/sh/yu1spzhhj8c9akl/AAALo8yXSfQ1nxaU2KFRGWuTa?dl=0), along with instructions for use.
 
 #### Primary code maintainer:
 Michael Everett (https://github.com/mfe7)
