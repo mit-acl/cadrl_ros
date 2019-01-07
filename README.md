@@ -83,5 +83,9 @@ Connect inputs/outputs of your system to `launch/cadrl_node.launch`
 As mentioned in the paper, we provide a few datasets that might be useful to researchers hoping to train NNs for collision avoidance.
 Please find the files in [this Dropbox folder](https://www.dropbox.com/sh/yu1spzhhj8c9akl/AAALo8yXSfQ1nxaU2KFRGWuTa?dl=0), along with instructions for use.
 
+The test cases used in the paper are posted in [this Dropbox folder](https://www.dropbox.com/sh/58uodr11pke8yi0/AACPrZQr8wFWyNlETIFDCc7Pa?dl=0).
+These contain initial positions, goal positions, preferred speed, radius settings for each test case, and are separated by number of agents.
+They were randomly generated in a way to produce reasonably interesting scenarios to evaluate the algorithms, but since they are random, some may be really easy or boring.
+
 #### Primary code maintainer:
 Michael Everett (https://github.com/mfe7)
