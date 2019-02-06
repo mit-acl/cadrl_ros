@@ -1,5 +1,5 @@
 FROM nvidia/cuda
-LABEL maintainer "Michael Everett <mfe@mit.edu>"
+LABEL maintainer "Michael Everett, Björn Lütjens <{mfe}, {lutjens}@mit.edu>"
 
 ##
 # Disclaimer: This Dockerfile enables to run /scripts/ga3c_cadrl_demo.ipynb
