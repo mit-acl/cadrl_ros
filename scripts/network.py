@@ -40,6 +40,8 @@ class NetworkVPCore(object):
     
     def _create_graph_inputs(self):
         self.x = tf.placeholder(tf.float32, [None, Config.NN_INPUT_SIZE], name='X')
+        # Dropout
+        self.keep_prob = tf.placeholder(tf.float32)
  
     def _create_graph_outputs(self):
         # FCN
@@ -50,7 +52,7 @@ class NetworkVPCore(object):
         self.softmax_p = (tf.nn.softmax(self.logits_p) + Config.MIN_POLICY) / (1.0 + Config.MIN_POLICY * self.num_actions)
 
     def predict_p(self, x, audio):
-        return self.sess.run(self.softmax_p, feed_dict={self.x: x})
+        return self.sess.run(self.softmax_p, feed_dict={self.x: x, self.keep_prob: 0.1})
 
     def simple_load(self, filename=None):
         if filename is None:
@@ -91,7 +93,9 @@ class NetworkVP_rnn(NetworkVPCore):
             self.layer1 = tf.layers.dense(inputs=self.layer1_input, units=256, activation=tf.nn.relu, kernel_regularizer=regularizer, name = 'layer1')
 
         self.layer2 = tf.layers.dense(inputs=self.layer1, units=256, activation=tf.nn.relu, name = 'layer2')
-        self.final_flat = tf.contrib.layers.flatten(self.layer2)
+        # Dropout
+        self.dropout2 = tf.nn.dropout(self.layer2, self.keep_prob)
+        self.final_flat = tf.contrib.layers.flatten(self.dropout2)
         
         # Use shared parent class to construct graph outputs/objectives
         self._create_graph_outputs()
