@@ -26,7 +26,18 @@ Those contain the policy as reported in our paper and enables other reasearchers
 
 To make it easy to understand the flow of the code, we provide an example in `scripts/ga3c_cadrl_demo.ipynb`, in the form of a Jupyter notebook. This can be used just as a reference, but if you want to edit the file, make sure Jupyter is installed in your tensorflow virtualenv to be sure it will work.
 
-### ROS Notes:
+#### To Run Jupyter Notebook (minimum working example of algorithm)
+```
+git clone git@github.com/mfe7/cadrl_ros
+./cadrl_ros/docker/build_docker.sh
+./cadrl_ros/docker/run_docker.sh
+```
+
+That will output a Jupyter notebook URL. Copy into your browser, navigate to `cadrl_ros/scripts` and open `ga3c_cadrl_demo.ipynb`.
+
+Tensorflow and other deps are already installed in the docker container you just built, so going through the notebook should work.
+
+#### ROS Notes:
 
 We also provide a ROS implementation that we tested on a Clearpath Jackal ground robot.
 This node is just one module of the software required for autonomous navigation among dynamic obstacles, and much of it is written as to integrate with our system.
@@ -36,6 +47,7 @@ We recommend looking at the Jupyter notebook first.
 
 The algorithm was trained with goals set to be <10m from the agent's start position, so it would be necessary to provide this system with local subgoals if it were to be tested in a long journey.
 For short distances, say in an open atrium, this is probably not necessary.
+
 
 #### To Run ROS version:
 Clone and build this repo and its dependency (assume destination is ~/catkin_ws/src)
