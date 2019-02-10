@@ -3,12 +3,27 @@
 ROS implementation of a dynamic obstacle avoidance algorithm trained with Deep RL
 <img src="misc/A3C_20agents_0.png" width="500" alt="20 agent circle">
 
-
 #### Paper:
 
-M. Everett, Y. Chen, and J. P. How, "Motion Planning Among Dynamic, Decision-Making Agents with Deep Reinforcement Learning", submitted to IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2018
+M. Everett, Y. Chen, and J. P. How, "Motion Planning Among Dynamic, Decision-Making Agents with Deep Reinforcement Learning", IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2018
 
-Link: https://arxiv.org/abs/1805.01956
+Paper: https://arxiv.org/abs/1805.01956
+Video: https://www.youtube.com/watch?v=XHoXkWLhwYQ
+
+Bibtex:
+```
+@inproceedings{Everett18_IROS,
+  address = {Madrid, Spain},
+  author = {Everett, Michael and Chen, Yu Fan and How, Jonathan P.},
+  booktitle = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  date-modified = {2018-10-03 06:18:08 -0400},
+  month = sep,
+  title = {Motion Planning Among Dynamic, Decision-Making Agents with Deep Reinforcement Learning},
+  year = {2018},
+  url = {https://arxiv.org/pdf/1805.01956.pdf},
+  bdsk-url-1 = {https://arxiv.org/pdf/1805.01956.pdf}
+}
+```
 
 #### Dependencies:
 
@@ -27,15 +42,18 @@ Those contain the policy as reported in our paper and enables other reasearchers
 To make it easy to understand the flow of the code, we provide an example in `scripts/ga3c_cadrl_demo.ipynb`, in the form of a Jupyter notebook. This can be used just as a reference, but if you want to edit the file, make sure Jupyter is installed in your tensorflow virtualenv to be sure it will work.
 
 #### To Run Jupyter Notebook (minimum working example of algorithm)
+
+This assumes you have `nvidia-docker` installed already. Might work with regular docker with minor changes.
+
 ```
 git clone git@github.com/mfe7/cadrl_ros
 ./cadrl_ros/docker/build_docker.sh
 ./cadrl_ros/docker/run_docker.sh
 ```
 
-That will output a Jupyter notebook URL. Copy into your browser, navigate to `cadrl_ros/scripts` and open `ga3c_cadrl_demo.ipynb`.
+That will start an instance of the docker container, and output a Jupyter notebook URL. Copy the URL into a browser, navigate to `cadrl_ros/scripts` and open `ga3c_cadrl_demo.ipynb`.
 
-Tensorflow and other deps are already installed in the docker container you just built, so going through the notebook should work.
+Tensorflow and other deps are already installed in the docker container you just built, so the notebook should "just work."
 
 #### ROS Notes:
 
@@ -52,10 +70,10 @@ For short distances, say in an open atrium, this is probably not necessary.
 #### To Run ROS version:
 Clone and build this repo and its dependency (assume destination is ~/catkin_ws/src)
 ```
-$ cd ~/catkin_ws/src
-$ git clone git@github.com/mfe7/cadrl_ros
-$ git clone git@bitbucket.org:acl-swarm/ford_msgs.git -b dev
-$ cd ~/catkin_ws && catkin_make
+cd ~/catkin_ws/src
+git clone git@github.com/mfe7/cadrl_ros
+git clone git@bitbucket.org:acl-swarm/ford_msgs.git -b dev
+cd ~/catkin_ws && catkin_make
 ```
 
 Connect inputs/outputs of your system to `launch/cadrl_node.launch`
