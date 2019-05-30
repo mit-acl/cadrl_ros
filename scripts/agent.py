@@ -4,7 +4,7 @@ import util
 import operator
 
 class Agent():
-    def __init__(self, start_x, start_y, goal_x, goal_y, radius, pref_speed, initial_heading, id):
+    def __init__(self, start_x, start_y, goal_x, goal_y, radius=0.5, pref_speed=1.0, initial_heading=0.0, id=0):
 
         self.policy_type = "A3C"
 

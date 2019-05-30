@@ -80,6 +80,102 @@ def convert_cadrl_state_to_state(cadrl_state):
 
     return agent_state
 
+def plot_current_state_ego_frame(state, figure_name=None, axes=None):
+    if axes is None:
+        if figure_name is None:
+            fig = plt.figure(figsize=(15, 6), frameon=False)
+        else:
+            fig = plt.figure(figure_name,figsize=(15, 6), frameon=False)
+            plt.clf()
+        ax = fig.add_subplot(1, 2, 1)
+    else:
+        ax = axes
+
+    plt_colors = []
+    plt_colors.append([0.8500, 0.3250, 0.0980]) # red
+    plt_colors.append([0.0, 0.4470, 0.7410]) # blue 
+    plt_colors.append([0.4660, 0.6740, 0.1880]) # green 
+    plt_colors.append([0.4940, 0.1840, 0.5560]) # purple
+    plt_colors.append([0.9290, 0.6940, 0.1250]) # orange 
+    plt_colors.append([0.3010, 0.7450, 0.9330]) # cyan 
+    plt_colors.append([0.6350, 0.0780, 0.1840]) # chocolate 
+
+
+    ###############################
+    # state vector
+    ##############################
+    try:
+        state = np.squeeze(state)
+
+        host_dist_to_goal = state[Config.FIRST_STATE_INDEX+0]
+        host_heading = state[Config.FIRST_STATE_INDEX+1]
+        host_pref_speed = state[Config.FIRST_STATE_INDEX+2]
+        host_radius = state[Config.FIRST_STATE_INDEX+3]
+
+        other_pxs = []
+        other_pys = []
+        other_vxs = []
+        other_vys = []
+        other_radii = []
+
+        if Config.MULTI_AGENT_ARCH == 'RNN':
+            num_others = int(state[0])
+        else:
+            num_others = int(sum([state[Config.FIRST_STATE_INDEX+Config.HOST_AGENT_STATE_SIZE+Config.OTHER_AGENT_FULL_OBSERVATION_LENGTH*(i+1)-1] for i in range(Config.MAX_NUM_OTHER_AGENTS_OBSERVED)]))
+
+        for i in range(num_others):
+            other_pxs.append(state[Config.FIRST_STATE_INDEX+Config.HOST_AGENT_STATE_SIZE+0+Config.OTHER_AGENT_FULL_OBSERVATION_LENGTH*i])
+            other_pys.append(state[Config.FIRST_STATE_INDEX+Config.HOST_AGENT_STATE_SIZE+1+Config.OTHER_AGENT_FULL_OBSERVATION_LENGTH*i])
+            other_vxs.append(state[Config.FIRST_STATE_INDEX+Config.HOST_AGENT_STATE_SIZE+2+Config.OTHER_AGENT_FULL_OBSERVATION_LENGTH*i])
+            other_vys.append(state[Config.FIRST_STATE_INDEX+Config.HOST_AGENT_STATE_SIZE+3+Config.OTHER_AGENT_FULL_OBSERVATION_LENGTH*i])
+            other_radii.append(state[Config.FIRST_STATE_INDEX+Config.HOST_AGENT_STATE_SIZE+4+Config.OTHER_AGENT_FULL_OBSERVATION_LENGTH*i])
+
+    except:
+        return
+    ####################################
+
+    plt_colors_local = plt_colors
+    
+    ##############################################################################################
+    # first subfigure
+    # convert to representation that's easier to plot
+
+    circ1 = plt.Circle((-host_dist_to_goal, 0.0), radius=host_radius, fc='w', ec=plt_colors_local[0])
+    ax.add_patch(circ1)
+    # goal
+    ax.plot(0.0, 0.0, c=plt_colors_local[0], marker='*', markersize=20)
+
+    wedge = ptch.Wedge([-host_dist_to_goal, 0.0], 1.0, rad2deg(host_heading - np.pi/3), rad2deg(host_heading + np.pi/3), alpha=0.1)
+    ax.add_patch(wedge)
+    heading = ax.plot([-host_dist_to_goal, -host_dist_to_goal + np.cos(host_heading)], [0.0, np.sin(host_heading)], 'k--')
+
+    # Other Agent
+    for i in range(len(other_pxs)): # plot all agents that are "ON"
+        # circ = plt.Circle((-host_dist_to_goal + other_px, other_py), radius=0.5, fc='w', ec=plt_colors_local[i+1])
+        circ = plt.Circle((-host_dist_to_goal + other_pxs[i], other_pys[i]), radius=other_radii[i], fc='w', ec=plt_colors_local[i+1])
+        ax.add_patch(circ)
+        # other agent's speed
+        ax.arrow(-host_dist_to_goal + other_pxs[i], other_pys[i], other_vxs[i], other_vys[i], fc=plt_colors_local[i+1], \
+            ec=plt_colors_local[i+1], head_width=0.05, head_length=0.1)
+
+    ax.set_xlabel('x (m)')
+    ax.set_ylabel('y (m)')
+    # plt.legend([vel_rvo, vel_SL], ['RVO', 'Selected'])
+
+    ax.axis('equal')
+    xlim = ax.get_xlim()
+    new_xlim = np.array((xlim[0], xlim[1]+0.5))
+    ax.set_xlim(new_xlim)
+    # plotting style (only show axis on bottom and left)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+    # plt.draw()
+    # plt.pause(0.0001)
+    return
+
 def plot_snapshot(state, real_action_one_hot, real_value, possible_actions, probs, values, figure_name=None):
     if figure_name is None:
         fig = plt.figure(figsize=(15, 6), frameon=False)

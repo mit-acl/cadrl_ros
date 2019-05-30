@@ -49,8 +49,20 @@ class NetworkVPCore(object):
         self.logits_p = tf.layers.dense(inputs = self.fc1, units = self.num_actions, name = 'logits_p', activation = None)
         self.softmax_p = (tf.nn.softmax(self.logits_p) + Config.MIN_POLICY) / (1.0 + Config.MIN_POLICY * self.num_actions)
 
-    def predict_p(self, x, audio):
+        # Cost: v 
+        self.logits_v = tf.squeeze(tf.layers.dense(inputs=self.fc1, units = 1, use_bias = True, activation=None, name = 'logits_v'), axis=[1])
+
+    def predict_p(self, x):
         return self.sess.run(self.softmax_p, feed_dict={self.x: x})
+
+    def predict_v(self, x):
+        return self.sess.run(self.logits_v, feed_dict={self.x: x})
+
+    def get_lstm_output(self, x):
+        return self.sess.run(self.rnn_output, feed_dict={self.x: x})
+
+    def predict_p_from_lstm_output(self, host_agent_vec, lstm_output):
+        return self.sess.run(nn.softmax_p, feed_dict={self.host_agent_vec: host_agent_vec, self.layer1_input: layer1_input})
 
     def simple_load(self, filename=None):
         if filename is None:
