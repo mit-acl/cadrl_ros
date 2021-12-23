@@ -339,7 +339,7 @@ class NN_jackal():
             self.visualize_action(use_d_min)
             return
         elif self.operation_mode.mode == self.operation_mode.SPIN_IN_PLACE:
-            print 'Spinning in place.'
+            print('Spinning in place.')
             self.stop_moving_flag = False
             angle_to_goal = np.arctan2(self.global_goal.pose.position.y - self.pose.pose.position.y, \
                 self.global_goal.pose.position.x - self.pose.pose.position.x) 
@@ -352,7 +352,7 @@ class NN_jackal():
                 twist.linear.x = vx
                 self.pub_twist.publish(twist)
             else:
-                print 'Done spinning in place'
+                print('Done spinning in place')
                 self.operation_mode.mode = self.operation_mode.NN
                 self.new_global_goal_received = False
             return
@@ -362,8 +362,8 @@ class NN_jackal():
 
     def cbComputeActionGA3C(self, event):
         if self.operation_mode.mode!=self.operation_mode.NN:
-            print 'Not in NN mode'
-            print self.operation_mode.mode
+            print('Not in NN mode')
+            print(self.operation_mode.mode)
             return
 
 
@@ -388,7 +388,7 @@ class NN_jackal():
         obs = host_agent.observe(other_agents_state)[1:]
         obs = np.expand_dims(obs, axis=0)
         # print "obs:", obs
-        predictions = self.nn.predict_p(obs, None)[0]
+        predictions = self.nn.predict_p(obs)[0]
         # print "predictions:", predictions
         # print "best action index:", np.argmax(predictions)
         raw_action = copy.deepcopy(self.actions[np.argmax(predictions)])
@@ -571,7 +571,7 @@ class NN_jackal():
 
 
 def run():
-    print 'hello world from cadrl_node.py'
+    print('hello world from cadrl_node.py')
     file_dir = os.path.dirname(os.path.realpath(__file__))
     plt.rcParams.update({'font.size': 18})
     rospack = rospkg.RosPack()
@@ -587,7 +587,7 @@ def run():
     pref_speed = rospy.get_param("~jackal_speed")
     veh_data = {'goal':np.zeros((2,)),'radius':0.5,'pref_speed':pref_speed,'kw':10.0,'kp':1.0,'name':'JA01'}
 
-    print "********\n*******\n*********\nJackal speed:", pref_speed, "\n**********\n******"
+    print("********\n*******\n*********\nJackal speed:", pref_speed, "\n**********\n******")
 
     nn_jackal = NN_jackal(veh_name, veh_data, nn, actions)
     rospy.on_shutdown(nn_jackal.on_shutdown)

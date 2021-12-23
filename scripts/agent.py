@@ -141,17 +141,17 @@ class Agent():
             self.ego_state_history = np.vstack([self.ego_state_history, ego_state])
 
     def print_agent_info(self):
-        print '----------'
-        print 'Global Frame:'
-        print '(px,py):', self.pos_global_frame
-        print '(vx,vy):', self.vel_global_frame
-        print '(gx, gy):', self.goal_global_frame
-        print 'speed:', self.speed_global_frame
-        print 'heading:', self.heading_global_frame
-        print 'Body Frame:'
-        print '(vx,vy):', self.vel_ego_frame
-        print 'heading:', self.heading_ego_frame
-        print '----------'
+        print('----------')
+        print('Global Frame:')
+        print('(px,py):', self.pos_global_frame)
+        print('(vx,vy):', self.vel_global_frame)
+        print('(gx, gy):', self.goal_global_frame)
+        print('speed:', self.speed_global_frame)
+        print('heading:', self.heading_global_frame)
+        print('Body Frame:')
+        print('(vx,vy):', self.vel_ego_frame)
+        print('heading:', self.heading_ego_frame)
+        print('----------')
 
     def to_vector(self):
         global_state = np.array([self.pos_global_frame[0], self.pos_global_frame[1], \

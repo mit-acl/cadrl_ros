@@ -66,7 +66,7 @@ class NetworkVPCore(object):
 
     def simple_load(self, filename=None):
         if filename is None:
-            print "[network.py] Didn't define simple_load filename"
+            print("[network.py] Didn't define simple_load filename")
         self.saver.restore(self.sess, filename)
 
 class NetworkVP_rnn(NetworkVPCore):
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         obs[0,4] = np.random.uniform(0.2, 1.5) # radius
         predictions = nn.predict_p(obs, None)[0]
     t_end = time.time()
-    print "avg query time:", (t_end - t_start)/num_queries
-    print "total time:", t_end - t_start
+    print("avg query time:", (t_end - t_start)/num_queries)
+    print("total time:", t_end - t_start)
     # action = actions[np.argmax(predictions)]
     # print "action:", action

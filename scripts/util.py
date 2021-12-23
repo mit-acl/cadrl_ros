@@ -63,7 +63,7 @@ def convert_cadrl_state_to_state(cadrl_state):
 
     elif Config.MAX_NUM_OTHER_AGENTS_OBSERVED == 2:
         agent_state = np.zeros([number_examples, Config.FULL_STATE_LENGTH])
-        print cadrl_state[:3,:]
+        print(cadrl_state[:3,:])
         # CADRL README.txt is incorrect......
         # [dist_to_goal, pref_speed, cur_speed, cur_heading, \
         #            other_vx, other_vy, rel_pos_x, rel_pos_y, self_radius, other_radius, self_radius+other_radius, vx, vy, dist_2_other]
@@ -75,7 +75,7 @@ def convert_cadrl_state_to_state(cadrl_state):
         agent_state[:,9:11] = cadrl_state[:,14:16] # combined radius, dist btwn
 
     else:
-        print "[regression util.py] invalid number of agents"
+        print("[regression util.py] invalid number of agents")
         assert(0)
 
     return agent_state
@@ -198,7 +198,7 @@ def plot_snapshot(state, real_action_one_hot, real_value, possible_actions, prob
     ##############################
     try:
         state = np.squeeze(state)
-        print state
+        print(state)
 
         host_dist_to_goal = state[Config.FIRST_STATE_INDEX+0]
         host_heading = state[Config.FIRST_STATE_INDEX+1]
